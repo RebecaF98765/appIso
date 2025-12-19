@@ -50,7 +50,7 @@ function hasConflict(resList, { room, date, time }, excludeId = null) {
 }
 
 initDB().then(() => {
-  console.log("✅ LowDB inicialitzada");
+  console.log("LowDB inicialitzada");
 
   // GET /api/reservations?room=A1&date=2025-12-19
   app.get("/api/reservations", async (req, res) => {
@@ -177,6 +177,6 @@ initDB().then(() => {
   });
 
   app.listen(port, () => {
-    console.log(`🚀 Servidor en marxa a http://localhost:${port}`);
+    console.log(`Servidor en marxa a http://localhost:${port}`);
   });
 });

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🏫 Gestor de Reserves d’Aules</title>
+  <title>🏫 Gestor de Reserves d'Aules</title>
 
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -16,7 +16,7 @@
     <header class="flex items-center gap-4">
       <div class="text-4xl">🏫</div>
       <div>
-        <h1 class="text-3xl font-bold">Gestor de Reserves d’Aules</h1>
+        <h1 class="text-3xl font-bold">Gestor de Reserves d'Aules</h1>
         <p class="text-slate-600">
           Evita conflictes: no es pot reservar la mateixa aula el mateix dia i hora.
         </p>
@@ -104,8 +104,8 @@
 
   function alertHTML(type, text) {
     const base = "mt-3 px-4 py-3 rounded-lg text-sm";
-    if (type === "ok") return `<div class="${base} bg-green-100 text-green-800">✅ ${text}</div>`;
-    return `<div class="${base} bg-red-100 text-red-800">⛔ ${text}</div>`;
+    if (type === "ok") return `<div class="${base} bg-green-100 text-green-800"> ${text}</div>`;
+    return `<div class="${base} bg-red-100 text-red-800"> ${text}</div>`;
   }
 
   async function loadReservations() {
