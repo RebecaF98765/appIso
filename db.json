@@ -1,0 +1,13 @@
+{
+  "reservations": [
+    {
+      "id": 1766104088852,
+      "room": "A1",
+      "date": "2026-02-01",
+      "time": "10:45",
+      "owner": "Raul",
+      "createdAt": "2025-12-19T00:28:08.852Z",
+      "updatedAt": null
+    }
+  ]
+}

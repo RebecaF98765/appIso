@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🏫 Gestor de Reserves d’Aules</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+  <div class="max-w-6xl mx-auto p-6 space-y-8">
+
+    <!-- Header -->
+    <header class="flex items-center gap-4">
+      <div class="text-4xl">🏫</div>
+      <div>
+        <h1 class="text-3xl font-bold">Gestor de Reserves d’Aules</h1>
+        <p class="text-slate-600">
+          Evita conflictes: no es pot reservar la mateixa aula el mateix dia i hora.
+        </p>
+      </div>
+    </header>
+
+    <!-- Nova reserva -->
+    <section class="bg-white rounded-xl shadow p-6 space-y-4">
+      <h2 class="text-xl font-semibold flex items-center gap-2">
+        ➕ Nova reserva
+      </h2>
+
+      <form id="createForm" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+        <div>
+          <label class="text-sm font-medium">Aula</label>
+          <input id="room" class="w-full border rounded-lg p-2" placeholder="A1" required>
+        </div>
+        <div>
+          <label class="text-sm font-medium">Data</label>
+          <input id="date" type="date" class="w-full border rounded-lg p-2" required>
+        </div>
+        <div>
+          <label class="text-sm font-medium">Hora</label>
+          <input id="time" type="time" class="w-full border rounded-lg p-2" required>
+        </div>
+        <div>
+          <label class="text-sm font-medium">Responsable</label>
+          <input id="owner" class="w-full border rounded-lg p-2" placeholder="Nom i cognoms" required>
+        </div>
+        <button class="bg-blue-600 text-white rounded-lg px-4 py-2 font-semibold hover:bg-blue-700">
+          Crear
+        </button>
+      </form>
+
+      <div id="createMsg"></div>
+    </section>
+
+    <!-- Reserves -->
+    <section class="bg-white rounded-xl shadow p-6 space-y-4">
+      <div class="flex flex-wrap gap-4 justify-between items-center">
+        <div class="flex items-center gap-3">
+          <h2 class="text-xl font-semibold">📅 Reserves</h2>
+          <span id="count" class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">0</span>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <input id="filterRoom" class="border rounded-lg p-2" placeholder="Filtra per aula">
+          <input id="filterDate" type="date" class="border rounded-lg p-2">
+          <button id="btnClear" class="bg-slate-200 px-3 py-2 rounded-lg">Neteja</button>
+          <button id="btnRefresh" class="bg-blue-600 text-white px-3 py-2 rounded-lg">Refresca</button>
+        </div>
+      </div>
+
+      <div id="listMsg"></div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-t">
+          <thead class="text-sm text-slate-500">
+            <tr>
+              <th class="py-2">Aula</th>
+              <th>Data</th>
+              <th>Hora</th>
+              <th>Responsable</th>
+              <th class="text-right">Accions</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+<script>
+  const createForm = document.getElementById("createForm");
+  const createMsg = document.getElementById("createMsg");
+  const tbody = document.getElementById("tbody");
+  const listMsg = document.getElementById("listMsg");
+  const count = document.getElementById("count");
+
+  const filterRoom = document.getElementById("filterRoom");
+  const filterDate = document.getElementById("filterDate");
+  const btnRefresh = document.getElementById("btnRefresh");
+  const btnClear = document.getElementById("btnClear");
+
+  function alertHTML(type, text) {
+    const base = "mt-3 px-4 py-3 rounded-lg text-sm";
+    if (type === "ok") return `<div class="${base} bg-green-100 text-green-800">✅ ${text}</div>`;
+    return `<div class="${base} bg-red-100 text-red-800">⛔ ${text}</div>`;
+  }
+
+  async function loadReservations() {
+    const params = new URLSearchParams();
+    if (filterRoom.value) params.set("room", filterRoom.value);
+    if (filterDate.value) params.set("date", filterDate.value);
+
+    const res = await fetch(`/api/reservations?${params}`);
+    const data = await res.json();
+
+    tbody.innerHTML = "";
+    count.textContent = data.length;
+
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-slate-500">No hi ha reserves</td></tr>`;
+      return;
+    }
+
+    data.forEach(r => {
+      const tr = document.createElement("tr");
+      tr.className = "border-t";
+
+      tr.innerHTML = `
+        <td class="py-3 font-semibold">${r.room}</td>
+        <td>${r.date}</td>
+        <td>${r.time}</td>
+        <td>
+          ${r.owner}
+          <div class="text-xs text-slate-500">
+            ${r.updatedAt ? "Editada" : "Creada"}: ${new Date(r.updatedAt || r.createdAt).toLocaleString()}
+          </div>
+        </td>
+        <td class="text-right space-x-2">
+          <button onclick="deleteReservation(${r.id})"
+            class="bg-red-600 text-white px-3 py-1 rounded-lg text-sm">
+            Eliminar
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  createForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    createMsg.innerHTML = "";
+
+    const payload = {
+      room: room.value,
+      date: date.value,
+      time: time.value,
+      owner: owner.value
+    };
+
+    const res = await fetch("/api/reservations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      createMsg.innerHTML = alertHTML("err", data.error || "Error");
+      return;
+    }
+
+    createForm.reset();
+    createMsg.innerHTML = alertHTML("ok", "Reserva creada correctament");
+    loadReservations();
+  });
+
+  async function deleteReservation(id) {
+    if (!confirm("Eliminar aquesta reserva?")) return;
+    await fetch(`/api/reservations/${id}`, { method: "DELETE" });
+    loadReservations();
+  }
+
+  btnRefresh.onclick = loadReservations;
+  btnClear.onclick = () => {
+    filterRoom.value = "";
+    filterDate.value = "";
+    loadReservations();
+  };
+
+  window.onload = loadReservations;
+</script>
+
+</body>
+</html>
